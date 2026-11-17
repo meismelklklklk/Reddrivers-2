@@ -1,0 +1,18 @@
+name: Build CIA
+on: [push]
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: devkitpro/devkitarm:latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          arm-none-eabi-g++ main.cpp -o game.elf -march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft -specs=3dsx.specs -I$DEVKITPRO/libctru/include -L$DEVKITPRO/libctru/lib -lctru -lm
+          curl -sL https://githubusercontent.com -o cia.rsf
+          makerom -f cia -o redriver2.cia -elf game.elf -rsf cia.rsf
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          files: redriver2.cia
